@@ -23,9 +23,8 @@ queue_t *q_new()
 /* Free all storage used by queue */
 void q_free(queue_t *q)
 {
-    list_ele_t *temp;
     while (q->head) {
-        temp = q->head;
+        list_ele_t *temp = q->head;
         q->head = temp->next;
         free(temp->value);
         free(temp);
@@ -42,21 +41,18 @@ void q_free(queue_t *q)
  */
 bool q_insert_head(queue_t *q, char *s)
 {
-    list_ele_t *newh;
-    char *s_in_ele;
-    int i, s_size;
     if (!q)
         return false;
-    newh = malloc(sizeof(list_ele_t));
+    list_ele_t *newh = (list_ele_t *) malloc(sizeof(list_ele_t));
     if (!newh)
         return false;
-    s_size = strlen(s) + 1;  // strlen() may not be safe if there is no '\0'
-    s_in_ele = (char *) malloc(sizeof(char) * s_size);
+    int s_size = strlen(s) + 1;  // strlen() may not be safe if there is no '\0'
+    char *s_in_ele = (char *) malloc(sizeof(char) * s_size);
     if (!s_in_ele) {
         free(newh);
         return false;
     }
-    for (i = 0; i < s_size; i++)  // copy the string including '/0'
+    for (int i = 0; i < s_size; i++)  // copy the string including '/0'
         s_in_ele[i] = s[i];
     newh->value = s_in_ele;
     newh->next = q->head;
@@ -76,21 +72,18 @@ bool q_insert_head(queue_t *q, char *s)
  */
 bool q_insert_tail(queue_t *q, char *s)
 {
-    list_ele_t *newt;
-    char *s_in_ele;
-    int i, s_size;
     if (!q)
         return false;
-    newt = malloc(sizeof(list_ele_t));
+    list_ele_t *newt = (list_ele_t *) malloc(sizeof(list_ele_t));
     if (!newt)
         return false;
-    s_size = strlen(s) + 1;
-    s_in_ele = (char *) malloc(sizeof(char) * s_size);
+    int s_size = strlen(s) + 1;
+    char *s_in_ele = (char *) malloc(sizeof(char) * s_size);
     if (!s_in_ele) {
         free(newt);
         return false;
     }
-    for (i = 0; i < s_size; i++)  // copy the string including '/0'
+    for (int i = 0; i < s_size; i++)  // copy the string including '/0'
         s_in_ele[i] = s[i];
     newt->value = s_in_ele;
     newt->next = NULL;
@@ -135,6 +128,8 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
     q->head = q->head->next;
     free(toDelete);
     q->size--;
+    if (!q->size)
+        q->tail = NULL;
     return true;
 }
 
