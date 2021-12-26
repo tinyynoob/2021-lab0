@@ -12,16 +12,24 @@
 queue_t *q_new()
 {
     queue_t *q = malloc(sizeof(queue_t));
-    /* TODO: What if malloc returned NULL? */
+    if (!q)
+        return NULL;
     q->head = NULL;
+    q->tail = NULL;
+    q->size = 0;
     return q;
 }
 
 /* Free all storage used by queue */
 void q_free(queue_t *q)
 {
-    /* TODO: How about freeing the list elements and the strings? */
-    /* Free queue structure */
+    list_ele_t *temp;
+    while (q->head) {
+        temp = q->head;
+        q->head = temp->next;
+        free(temp->value);
+        free(temp);
+    }
     free(q);
 }
 
@@ -35,28 +43,62 @@ void q_free(queue_t *q)
 bool q_insert_head(queue_t *q, char *s)
 {
     list_ele_t *newh;
-    /* TODO: What should you do if the q is NULL? */
+    char *s_in_ele;
+    int i, s_size;
+    if (!q)
+        return false;
     newh = malloc(sizeof(list_ele_t));
-    /* Don't forget to allocate space for the string and copy it */
-    /* What if either call to malloc returns NULL? */
+    if (!newh)
+        return false;
+    s_size = strlen(s) + 1;  // strlen() may not be safe if there is no '\0'
+    s_in_ele = (char *) malloc(sizeof(char) * s_size);
+    if (!s_in_ele) {
+        free(newh);
+        return false;
+    }
+    for (i = 0; i < s_size; i++)  // copy the string including '/0'
+        s_in_ele[i] = s[i];
+    newh->value = s_in_ele;
     newh->next = q->head;
     q->head = newh;
+    if (!newh->next)  // if newh is the only element
+        q->tail = newh;
+    q->size++;
     return true;
 }
 
 /*
  * Attempt to insert element at tail of queue.
  * Return true if successful.
- * Return false if q is NULL or could not allocate space.
+ * Return false if q is false or could not allocate space.
  * Argument s points to the string to be stored.
  * The function must explicitly allocate space and copy the string into it.
  */
 bool q_insert_tail(queue_t *q, char *s)
 {
-    /* TODO: You need to write the complete code for this function */
-    /* Remember: It should operate in O(1) time */
-    /* TODO: Remove the above comment when you are about to implement. */
-    return false;
+    list_ele_t *newt;
+    char *s_in_ele;
+    int i, s_size;
+    if (!q)
+        return false;
+    newt = malloc(sizeof(list_ele_t));
+    if (!newt)
+        return false;
+    s_size = strlen(s) + 1;
+    s_in_ele = (char *) malloc(sizeof(char) * s_size);
+    if (!s_in_ele) {
+        free(newt);
+        return false;
+    }
+    for (i = 0; i < s_size; i++)  // copy the string including '/0'
+        s_in_ele[i] = s[i];
+    newt->value = s_in_ele;
+    newt->next = NULL;
+    q->tail = newt;
+    if (!q->head)
+        q->head = newt;
+    q->size++;
+    return true;
 }
 
 /*
