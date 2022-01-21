@@ -104,9 +104,7 @@ bool q_insert_tail(queue_t *q, char *s)
  */
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
-    if (!q)
-        return false;
-    else if (!q->size)
+    if (!q || !q->size)
         return false;
     char *it = q->head->value;
     size_t sp_size = 0;
@@ -166,4 +164,73 @@ void q_sort(queue_t *q)
 {
     /* TODO: You need to write the code for this function */
     /* TODO: Remove the above comment when you are about to implement. */
+    if (!q || !q->size)
+        return;
+    list_ele_t **array = (list_ele_t **) malloc(sizeof(list_ele_t *) *
+                                                q->size);  // array of pointers
+    list_ele_t *temp = q->head;
+    for (int i = 0; i < q->size; i++) {
+        array[i] = temp;
+        temp = temp->next;
+    }
+    q_sort_recur(array, 0, q->size - 1, string_compare);
+
+    /* relink the list with the result */
+    for (int i = 0; i < q->size - 1; i++)
+        array[i]->next = array[i + 1];
+    q->head = array[0];
+    q->tail = array[q->size - 1];
+    free(array);
+}
+
+void q_sort_recur(list_ele_t **array,
+                  int left,
+                  int right,
+                  int (*cmp)(char *, char *))
+{
+    if (left >= right)
+        return;
+    /*choose array[right] as pivot*/
+    list_ele_t *temp;
+    int i = left;
+    for (int j = left; j < right; j++) {
+        if (cmp(array[j]->value, array[right]->value) < 0) {
+            /* exchange array[i] and array[j] */
+            temp = array[i];
+            array[i] = array[j];
+            array[j] = temp;
+            /* end exchange */
+            i++;
+        }
+    }
+    /* exchange array[i] and array[right] */
+    temp = array[i];
+    array[i] = array[right];
+    array[right] = temp;
+    /* end exchange */
+    q_sort_recur(array, left, i - 1, cmp);
+    q_sort_recur(array, i + 1, right, cmp);
+}
+
+/*
+ * compare according to ascii value
+ * Next goal: try to find a non-branch solution
+ */
+int string_compare(char *a, char *b)
+{
+    while (a && b) {
+        if (*a < *b)
+            return -1;
+        else if (*a > *b)
+            return 1;
+        a++;
+        b++;
+    }
+    // if someone terminates
+    if (!a && !b)
+        return 0;
+    else if (!a)
+        return -1;
+    else
+        return 1;
 }
