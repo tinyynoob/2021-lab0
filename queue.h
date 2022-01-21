@@ -93,4 +93,7 @@ void q_reverse(queue_t *q);
  */
 void q_sort(queue_t *q);
 
+void q_sort_recur(list_ele_t **, int, int, int (*)(char *, char *));
+int string_compare(char *a, char *b);
+
 #endif /* LAB0_QUEUE_H */
