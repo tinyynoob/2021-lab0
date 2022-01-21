@@ -30,7 +30,7 @@ void q_free(queue_t *q)
         free(temp);
     }
     free(q);
-    // q = NULL;     //should I?
+    // we dont need to set q to NULL since it has no effect outside the function
 }
 
 /*
@@ -154,8 +154,20 @@ int q_size(queue_t *q)
  */
 void q_reverse(queue_t *q)
 {
-    /* TODO: You need to write the code for this function */
-    /* TODO: Remove the above comment when you are about to implement. */
+    if (!q || q->size == 0 || q->size == 1)
+        return;
+    q->tail = q->head;
+    list_ele_t *prev = q->head;
+    list_ele_t *temp = q->head->next->next;
+    q->head = q->head->next;
+    q->head->next = prev;
+    while (temp) {
+        prev = q->head;
+        q->head = temp;
+        q->head->next = prev;
+        temp = temp->next;
+    }
+    q->tail->next = NULL;
 }
 
 /*
@@ -165,8 +177,6 @@ void q_reverse(queue_t *q)
  */
 void q_sort(queue_t *q)
 {
-    /* TODO: You need to write the code for this function */
-    /* TODO: Remove the above comment when you are about to implement. */
     if (!q || !q->size)
         return;
     list_ele_t **array = (list_ele_t **) malloc(sizeof(list_ele_t *) *
@@ -193,7 +203,7 @@ void q_sort_recur(list_ele_t **array,
 {
     if (left >= right)
         return;
-    /*choose array[right] as pivot*/
+    /* choose array[right] as pivot */
     list_ele_t *temp;
     int i = left;
     for (int j = left; j < right; j++) {
