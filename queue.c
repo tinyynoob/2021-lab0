@@ -25,11 +25,12 @@ void q_free(queue_t *q)
 {
     while (q->head) {
         list_ele_t *temp = q->head;
-        q->head = temp->next;
+        q->head = q->head->next;
         free(temp->value);
         free(temp);
     }
     free(q);
+    // q = NULL;     //should I?
 }
 
 /*
@@ -57,7 +58,7 @@ bool q_insert_head(queue_t *q, char *s)
     newh->value = s_in_ele;
     newh->next = q->head;
     q->head = newh;
-    if (!newh->next)  // if newh is the only element
+    if (!q->tail)  // if newh is the only element
         q->tail = newh;
     q->size++;
     return true;
@@ -87,8 +88,10 @@ bool q_insert_tail(queue_t *q, char *s)
         s_in_ele[i] = s[i];
     newt->value = s_in_ele;
     newt->next = NULL;
+    if (q->tail)
+        q->tail->next = newt;
     q->tail = newt;
-    if (!q->head)
+    if (!q->head)  // if newt is the only element
         q->head = newt;
     q->size++;
     return true;
@@ -125,9 +128,9 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
     list_ele_t *toDelete = q->head;
     q->head = q->head->next;
     free(toDelete);
-    q->size--;
-    if (!q->size)
+    if (!q->head)
         q->tail = NULL;
+    q->size--;
     return true;
 }
 
@@ -218,7 +221,7 @@ void q_sort_recur(list_ele_t **array,
  */
 int string_compare(char *a, char *b)
 {
-    while (a && b) {
+    while (*a && *b) {
         if (*a < *b)
             return -1;
         else if (*a > *b)
@@ -227,9 +230,9 @@ int string_compare(char *a, char *b)
         b++;
     }
     // if someone terminates
-    if (!a && !b)
+    if (!*a && !*b)
         return 0;
-    else if (!a)
+    else if (!*a)
         return -1;
     else
         return 1;
