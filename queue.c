@@ -164,8 +164,8 @@ void q_reverse(queue_t *q)
     while (temp) {
         prev = q->head;
         q->head = temp;
-        q->head->next = prev;
         temp = temp->next;
+        q->head->next = prev;
     }
     q->tail->next = NULL;
 }
