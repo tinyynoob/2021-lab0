@@ -5,6 +5,11 @@
 #include "harness.h"
 #include "queue.h"
 
+#define min(a, b)     \
+    {                 \
+        a < b ? a : b \
+    }
+
 /*
  * Create empty queue.
  * Return NULL if could not allocate space.
@@ -109,21 +114,13 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
     if (!q || !q->size)
         return false;
-    char *it = q->head->value;
-    size_t sp_size = 0;
-    while (!*it && sp_size < bufsize) {  // compute sp_size
-        it++;
-        sp_size++;
-    }
-    if (sp) {  // If sp is non-NULL
-        sp = (char *) malloc(sizeof(char) * sp_size);
-        if (!sp)
-            return false;
-        for (size_t i = 0; i < sp_size; i++)  // copy the removed string to sp
+    size_t sp_size = min(strlen(q->head->value), bufsize - 1);
+    sp_size = sp_size + 1;
+    if (sp) {                                     // if sp is non-NULL
+        for (size_t i = 0; i < sp_size - 1; i++)  // copy the string
             sp[i] = q->head->value[i];
+        sp[sp_size - 1] = '\0';
     }
-    if (sp_size == bufsize)  // if the maximum is achieved
-        sp[bufsize - 1] = '\0';
     free(q->head->value);
     list_ele_t *toDelete = q->head;
     q->head = q->head->next;
