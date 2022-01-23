@@ -179,50 +179,35 @@ void q_sort(queue_t *q)
 {
     if (!q || !q->size)
         return;
-    list_ele_t **array = (list_ele_t **) malloc(sizeof(list_ele_t *) *
-                                                q->size);  // array of pointers
-    list_ele_t *temp = q->head;
-    for (int i = 0; i < q->size; i++) {
-        array[i] = temp;
-        temp = temp->next;
-    }
-    q_sort_recur(array, 0, q->size - 1, string_compare);
-
-    /* relink the list with the result */
-    for (int i = 0; i < q->size - 1; i++)
-        array[i]->next = array[i + 1];
-    q->head = array[0];
-    q->tail = array[q->size - 1];
-    free(array);
+    q->head = sortList(q->head, string_compare);
+    list_ele_t *it;
+    for (it = q->head; it->next; it = it->next)
+        ;
+    q->tail = it;
 }
 
-void q_sort_recur(list_ele_t **array,
-                  int left,
-                  int right,
-                  int (*cmp)(char *, char *))
+list_ele_t *sortList(list_ele_t *head, int (*cmp)(char *, char *))
 {
-    if (left >= right)
-        return;
-    /* choose array[right] as pivot */
-    list_ele_t *temp;
-    int i = left;
-    for (int j = left; j < right; j++) {
-        if (cmp(array[j]->value, array[right]->value) < 0) {
-            /* exchange array[i] and array[j] */
-            temp = array[i];
-            array[i] = array[j];
-            array[j] = temp;
-            /* end exchange */
-            i++;
-        }
+    if (!head || !head->next)
+        return head;
+    char *pivot = head->value;
+    list_ele_t *left = NULL, *right = NULL, *it = head->next;
+    while (it) {
+        list_ele_t *temp = it->next;
+        push(cmp(it->value, pivot) > 0 ? &right : &left, it);
+        it = temp;
     }
-    /* exchange array[i] and array[right] */
-    temp = array[i];
-    array[i] = array[right];
-    array[right] = temp;
-    /* end exchange */
-    q_sort_recur(array, left, i - 1, cmp);
-    q_sort_recur(array, i + 1, right, cmp);
+    left = sortList(left, cmp);
+    right = sortList(right, cmp);
+
+    head->next = right;
+    if (left) {
+        for (it = left; it->next; it = it->next)
+            ;
+        it->next = head;
+        return left;
+    } else
+        return head;
 }
 
 /*
