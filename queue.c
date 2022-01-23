@@ -28,6 +28,8 @@ queue_t *q_new()
 /* Free all storage used by queue */
 void q_free(queue_t *q)
 {
+    if (!q)  // prevent doubly free
+        return;
     while (q->head) {
         list_ele_t *temp = q->head;
         q->head = q->head->next;
@@ -35,7 +37,7 @@ void q_free(queue_t *q)
         free(temp);
     }
     free(q);
-    // we dont need to set q to NULL since it has no effect outside the function
+    // we should not set q to NULL since it has no effect outside the function
 }
 
 /*
@@ -176,18 +178,18 @@ void q_sort(queue_t *q)
 {
     if (!q || !q->size)
         return;
-    q->head = sortList(q->head, string_compare);
+    q->head = sortList(q->head, strcmp);
     list_ele_t *it;
     for (it = q->head; it->next; it = it->next)
         ;
     q->tail = it;
 }
 
-list_ele_t *sortList(list_ele_t *head, int (*cmp)(char *, char *))
+list_ele_t *sortList(list_ele_t *head, int (*cmp)(const char *, const char *))
 {
     if (!head || !head->next)
         return head;
-    char *pivot = head->value;
+    const char *pivot = head->value;
     list_ele_t *left = NULL, *right = NULL, *it = head->next;
     while (it) {
         list_ele_t *temp = it->next;
@@ -197,35 +199,11 @@ list_ele_t *sortList(list_ele_t *head, int (*cmp)(char *, char *))
     left = sortList(left, cmp);
     right = sortList(right, cmp);
 
-    head->next = right;
     if (left) {
         for (it = left; it->next; it = it->next)
             ;
         it->next = head;
-        return left;
-    } else
-        return head;
-}
-
-/*
- * compare according to ascii value
- * Next goal: try to find a non-branch solution
- */
-int string_compare(char *a, char *b)
-{
-    while (*a && *b) {
-        if (*a < *b)
-            return -1;
-        else if (*a > *b)
-            return 1;
-        a++;
-        b++;
     }
-    // if someone terminates
-    if (!*a && !*b)
-        return 0;
-    else if (!*a)
-        return -1;
-    else
-        return 1;
+    head->next = right;
+    return left ? left : head;
 }
