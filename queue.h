@@ -93,7 +93,12 @@ void q_reverse(queue_t *q);
  */
 void q_sort(queue_t *q);
 
-void q_sort_recur(list_ele_t **, int, int, int (*)(char *, char *));
-int string_compare(char *a, char *b);
+list_ele_t *sortList(list_ele_t *head, int (*cmp)(const char *, const char *));
+
+void inline push(list_ele_t **head, list_ele_t *newNode)
+{
+    newNode->next = *head;
+    (*head) = newNode;
+}
 
 #endif /* LAB0_QUEUE_H */

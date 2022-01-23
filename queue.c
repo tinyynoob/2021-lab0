@@ -5,6 +5,11 @@
 #include "harness.h"
 #include "queue.h"
 
+#define min(a, b)     \
+    {                 \
+        a < b ? a : b \
+    }
+
 /*
  * Create empty queue.
  * Return NULL if could not allocate space.
@@ -23,6 +28,8 @@ queue_t *q_new()
 /* Free all storage used by queue */
 void q_free(queue_t *q)
 {
+    if (!q)  // prevent doubly free
+        return;
     while (q->head) {
         list_ele_t *temp = q->head;
         q->head = q->head->next;
@@ -30,7 +37,7 @@ void q_free(queue_t *q)
         free(temp);
     }
     free(q);
-    // we dont need to set q to NULL since it has no effect outside the function
+    // we should not set q to NULL since it has no effect outside the function
 }
 
 /*
@@ -109,21 +116,13 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
     if (!q || !q->size)
         return false;
-    char *it = q->head->value;
-    size_t sp_size = 0;
-    while (!*it && sp_size < bufsize) {  // compute sp_size
-        it++;
-        sp_size++;
-    }
-    if (sp) {  // If sp is non-NULL
-        sp = (char *) malloc(sizeof(char) * sp_size);
-        if (!sp)
-            return false;
-        for (size_t i = 0; i < sp_size; i++)  // copy the removed string to sp
+    size_t sp_size = min(strlen(q->head->value), bufsize - 1);
+    sp_size = sp_size + 1;
+    if (sp) {                                     // if sp is non-NULL
+        for (size_t i = 0; i < sp_size - 1; i++)  // copy the string
             sp[i] = q->head->value[i];
+        sp[sp_size - 1] = '\0';
     }
-    if (sp_size == bufsize)  // if the maximum is achieved
-        sp[bufsize - 1] = '\0';
     free(q->head->value);
     list_ele_t *toDelete = q->head;
     q->head = q->head->next;
@@ -164,8 +163,8 @@ void q_reverse(queue_t *q)
     while (temp) {
         prev = q->head;
         q->head = temp;
-        q->head->next = prev;
         temp = temp->next;
+        q->head->next = prev;
     }
     q->tail->next = NULL;
 }
@@ -179,71 +178,32 @@ void q_sort(queue_t *q)
 {
     if (!q || !q->size)
         return;
-    list_ele_t **array = (list_ele_t **) malloc(sizeof(list_ele_t *) *
-                                                q->size);  // array of pointers
-    list_ele_t *temp = q->head;
-    for (int i = 0; i < q->size; i++) {
-        array[i] = temp;
-        temp = temp->next;
-    }
-    q_sort_recur(array, 0, q->size - 1, string_compare);
-
-    /* relink the list with the result */
-    for (int i = 0; i < q->size - 1; i++)
-        array[i]->next = array[i + 1];
-    q->head = array[0];
-    q->tail = array[q->size - 1];
-    free(array);
+    q->head = sortList(q->head, strcmp);
+    list_ele_t *it;
+    for (it = q->head; it->next; it = it->next)
+        ;
+    q->tail = it;
 }
 
-void q_sort_recur(list_ele_t **array,
-                  int left,
-                  int right,
-                  int (*cmp)(char *, char *))
+list_ele_t *sortList(list_ele_t *head, int (*cmp)(const char *, const char *))
 {
-    if (left >= right)
-        return;
-    /* choose array[right] as pivot */
-    list_ele_t *temp;
-    int i = left;
-    for (int j = left; j < right; j++) {
-        if (cmp(array[j]->value, array[right]->value) < 0) {
-            /* exchange array[i] and array[j] */
-            temp = array[i];
-            array[i] = array[j];
-            array[j] = temp;
-            /* end exchange */
-            i++;
-        }
+    if (!head || !head->next)
+        return head;
+    const char *pivot = head->value;
+    list_ele_t *left = NULL, *right = NULL, *it = head->next;
+    while (it) {
+        list_ele_t *temp = it->next;
+        push(cmp(it->value, pivot) > 0 ? &right : &left, it);
+        it = temp;
     }
-    /* exchange array[i] and array[right] */
-    temp = array[i];
-    array[i] = array[right];
-    array[right] = temp;
-    /* end exchange */
-    q_sort_recur(array, left, i - 1, cmp);
-    q_sort_recur(array, i + 1, right, cmp);
-}
+    left = sortList(left, cmp);
+    right = sortList(right, cmp);
 
-/*
- * compare according to ascii value
- * Next goal: try to find a non-branch solution
- */
-int string_compare(char *a, char *b)
-{
-    while (*a && *b) {
-        if (*a < *b)
-            return -1;
-        else if (*a > *b)
-            return 1;
-        a++;
-        b++;
+    if (left) {
+        for (it = left; it->next; it = it->next)
+            ;
+        it->next = head;
     }
-    // if someone terminates
-    if (!*a && !*b)
-        return 0;
-    else if (!*a)
-        return -1;
-    else
-        return 1;
+    head->next = right;
+    return left ? left : head;
 }
