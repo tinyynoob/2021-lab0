@@ -189,21 +189,51 @@ list_ele_t *sortList(list_ele_t *head, int (*cmp)(const char *, const char *))
 {
     if (!head || !head->next)
         return head;
-    const char *pivot = head->value;
-    list_ele_t *left = NULL, *right = NULL, *it = head->next;
-    while (it) {
-        list_ele_t *temp = it->next;
-        push(cmp(it->value, pivot) > 0 ? &right : &left, it);
-        it = temp;
-    }
-    left = sortList(left, cmp);
-    right = sortList(right, cmp);
+    list_ele_t *mid = truncate_and_findMid(head);
+    head = sortList(head, cmp);
+    mid = sortList(mid, cmp);
+    return mergeSorted(head, mid, cmp);
+}
 
-    if (left) {
-        for (it = left; it->next; it = it->next)
-            ;
-        it->next = head;
+/* split the list and return a pointer to the mid element */
+list_ele_t *truncate_and_findMid(list_ele_t *const head)
+{
+    /* the list should be guarantee to have at least 2 elements */
+    list_ele_t *fast = head->next;
+    list_ele_t *slow = head;
+    list_ele_t *toTruncate = NULL;
+    while (fast) {
+        /* fast forwards 2 place and slow forwards 1 place each iteration */
+        if (fast->next)
+            fast = fast->next->next;
+        else
+            fast = fast->next;
+        toTruncate = slow;
+        slow = slow->next;
     }
-    head->next = right;
-    return left ? left : head;
+    toTruncate->next = NULL;
+    return slow;
+}
+
+list_ele_t *mergeSorted(list_ele_t *first,
+                        list_ele_t *second,
+                        int (*cmp)(const char *, const char *))
+{
+    list_ele_t *ans;
+    pop(cmp(first->value, second->value) < 0 ? &first : &second, &ans);
+    list_ele_t *it = ans;
+    while (1) {
+        if (!first) {
+            it->next = second;
+            break;
+        } else if (!second) {
+            it->next = first;
+            break;
+        } else {
+            pop(cmp(first->value, second->value) < 0 ? &first : &second,
+                &it->next);
+            it = it->next;
+        }
+    }
+    return ans;
 }
