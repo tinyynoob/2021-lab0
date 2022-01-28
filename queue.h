@@ -94,11 +94,15 @@ void q_reverse(queue_t *q);
 void q_sort(queue_t *q);
 
 list_ele_t *sortList(list_ele_t *head, int (*cmp)(const char *, const char *));
+list_ele_t *truncate_and_findMid(list_ele_t *const);
+list_ele_t *mergeSorted(list_ele_t *,
+                        list_ele_t *,
+                        int (*)(const char *, const char *));
 
-void inline push(list_ele_t **head, list_ele_t *newNode)
+void inline pop(list_ele_t **stack, list_ele_t **receiver)
 {
-    newNode->next = *head;
-    (*head) = newNode;
+    *receiver = *stack;
+    *stack = (*stack)->next;
 }
 
 #endif /* LAB0_QUEUE_H */
